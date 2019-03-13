@@ -1,0 +1,13 @@
+*.rej
+*~
+*~~
+*.o
+o.*
+*.a
+*.ao
+*.out
+tests/*.err
+pruebas
+dist
+src/.*.swp
+*.wav

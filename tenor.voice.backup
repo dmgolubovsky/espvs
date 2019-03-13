@@ -1,0 +1,33 @@
+name tenor
+language en-us
+phonemes en-us
+gender male
+pitch 160 160
+flutter 1
+breath 1 0 0 1 0 0 0 0
+roughness 2
+intonation 3
+dictrules 3 6
+voicing 150
+consonants 20 30
+tone 80 200 250 40 300 20 800 20
+
+replace 03 I  i
+replace 03 I2 i
+
+formant 0 100 90 
+formant 1 100 90         
+formant 2 100 90
+formant 3 100 90
+formant 4 100 90
+formant 5 100 90
+formant 6 100 0
+formant 7 100 0
+formant 8 100 0
+
+stressLength 1000 1000 1000 1000 1000 1000 1000 1000
+
+stressAdd 0 0 0 0 0 0 0 0
+
+stressAmp 20 20 20 20 20 20 20 20
+

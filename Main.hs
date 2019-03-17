@@ -15,7 +15,7 @@ main = withCliModified mods main'
 main' :: MVCE -> Options -> IO ()
 
 main' (MVCE vpath') opts = do
-  mainWithGUI vpath'
+  mainWithGUI vpath' opts
 
 data MVCE = MVCE FilePath
 
@@ -26,12 +26,13 @@ instance Argument MVCE where
 instance HasArguments MVCE where
   argumentsParser = atomicArgumentsParser
 
-data Options = Options {
-}  deriving (Show, Generic, HasArguments)
-
 mods :: [Modifier]
 
 mods = [
+  AddShortOption "score" 's'
+ ,AddOptionHelp  "score" "Set score from this musicxml file"
+ ,AddShortOption "backing" 'b'
+ ,AddOptionHelp  "backing" "Set path to the backing track"
        ]
 
 

@@ -9,16 +9,17 @@ import System.Environment
 import Control.Concurrent.Thread
 import qualified System.IO.Strict as SIO
 
-genVocal :: String -> String -> String -> FilePath -> String -> String 
+genVocal :: String -> String -> String -> FilePath -> String -> String -> Maybe String
          -> IO (Either String FilePath)
 
-genVocal execp synthp voice score part detune = do
-  let synth = proc execp [ "-v", voice,
-                           "-p", part,
-                           "-D", detune,
-                           "-S",
-                           score
-                         ]
+genVocal execp synthp voice score part detune mbcf = do
+  let cfl = case mbcf of
+              Nothing -> []
+              Just cf -> ["-F", cf]
+  let synth = proc execp $ [ "-v", voice,
+                             "-p", part,
+                             "-D", detune,
+                             "-S"] ++ cfl ++ [score]
   (_, mbhout, mbherr, p) <- createProcess synth {std_out = CreatePipe, std_err = CreatePipe}
   (t, x) <- forkIO $ do
     case mbherr of
@@ -76,4 +77,26 @@ trackLength fp = do
       let s' = head $ lines $ s ++ "\n\n"
       let d = read s'
       return d
+
+mixVoc :: FilePath -> FilePath -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
+
+mixVoc voc back = do
+  let mback = case back of
+        [] -> []
+        bf -> ["-m", bf]
+  let play = proc "play" $ ["-S"] ++ mback ++ [voc, "remix", "-"]
+  createProcess play {std_out = CreatePipe, std_err = CreatePipe}
+
+waitVoc :: (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle) -> (String -> IO()) -> IO Bool
+
+waitVoc (_, _, _, p) prgr = do
+  c <- waitForProcess p
+  case c of
+    ExitSuccess -> return True
+    _ -> return False
+
+stopVoc :: (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle) -> IO ()
+
+stopVoc (_, _, _, p) = terminateProcess p
+
 

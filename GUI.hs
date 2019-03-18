@@ -204,12 +204,47 @@ setPlay :: FilePath -> Builder -> IO ()
 
 setPlay fp builder = do
   [play, stop, loop] <- mapM (builderGetObject builder castToButton) ["Play", "Stop", "Loop"]
-  after play buttonActivated $ do
-    sclb <- getLabel "ScorePath" builder
-    scpt <- getCBox "ScorePart" builder
-    detu <- getSpinBtn "Detune" builder
-    r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu
-    putStrLn $ show r
-    return ()
+  widgetSetSensitive (castToWidget stop) False
+  after play buttonActivated $ doplay False
+  after loop buttonActivated $ doplay True
   return ()
+  where 
+    doplay rpt = do
+      [play, stop, loop] <- mapM (builderGetObject builder castToButton) ["Play", "Stop", "Loop"]
+      sclb <- getLabel "ScorePath" builder
+      scpt <- getCBox "ScorePart" builder
+      detu <- getSpinBtn "Detune" builder
+      setLabel "VocalPath" "..." builder
+      r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu Nothing
+      case r of
+        Left err -> do
+          setLabel "VocalPath" ("Error: " ++ err) builder
+          return ()
+        Right wfp -> do
+          setLabel "VocalPath" wfp builder
+          widgetSetSensitive (castToWidget play) False
+          widgetSetSensitive (castToWidget loop) False
+          bfp <- getLabel "BackingPath" builder
+          mp <- mixVoc wfp bfp
+          widgetSetSensitive (castToWidget stop) True
+          after stop buttonActivated $ stopVoc mp
+          forkIO $ do 
+            b <- waitVoc mp (progress builder)
+            putStrLn $ show b
+            postGUIAsync $ do
+              after stop buttonActivated $ return ()
+              widgetSetSensitive (castToWidget stop) False
+              if (b && rpt)
+                then doplay rpt
+                else do
+                       widgetSetSensitive (castToWidget play) True
+                       widgetSetSensitive (castToWidget loop) True
+                       return ()
+            return ()
+          return ()
+      return ()
+
+progress :: Builder -> String -> IO ()
+
+progress str bld = return ()
 

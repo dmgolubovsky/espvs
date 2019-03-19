@@ -4,6 +4,8 @@ module CalbSynth where
 import System.IO
 import System.Exit
 import System.Process
+import System.Process.Internals
+import System.Posix.Signals
 import System.FilePath
 import System.Environment
 import Control.Concurrent.Thread
@@ -78,13 +80,17 @@ trackLength fp = do
       let d = read s'
       return d
 
-mixVoc :: FilePath -> FilePath -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
+mixVoc :: FilePath -> FilePath -> Maybe String 
+       -> IO (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle)
 
-mixVoc voc back = do
+mixVoc voc back mbtrim = do
   let mback = case back of
         [] -> []
         bf -> ["-m", bf]
-  let play = proc "play" $ ["-S"] ++ mback ++ [voc, "remix", "-"]
+  let trim = case mbtrim of
+        Nothing -> []
+        Just tr -> ["trim", "0", tr]
+  let play = proc "play" $ ["-S"] ++ mback ++ [voc, "remix", "-"] ++ trim
   createProcess play {std_out = CreatePipe, std_err = CreatePipe}
 
 waitVoc :: (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle) -> (String -> IO()) -> IO Bool
@@ -97,6 +103,9 @@ waitVoc (_, _, _, p) prgr = do
 
 stopVoc :: (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle) -> IO ()
 
-stopVoc (_, _, _, p) = terminateProcess p
+stopVoc (_, _, _, p) = withProcessHandle p $ \ph_ ->
+    case ph_ of
+      OpenHandle pid -> signalProcess sigKILL pid
+      ClosedHandle _ -> return () 
 
 

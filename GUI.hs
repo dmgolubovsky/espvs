@@ -30,6 +30,7 @@ setElem :: VoiceLine -> [Builder -> IO String]
 setElem (VoiceName vn) = [setLabel "VoiceName" vn]
 setElem (VoiceLang ln) = [setLabel "VoiceLang" ln]
 setElem (Pitch p _) = [setSpinBtn "PitchSet" p]
+setElem (Speed f) = [setSpinBtn "Speed" f]
 setElem (Flutter f) = [setSpinBtn "Flutter" f]
 setElem (Roughness r) = [setSpinBtn "Roughness" r]
 setElem (Intonation i) = [setSpinBtn "Intonation" i]
@@ -79,6 +80,7 @@ getCBox cbid bld = ctch $ do
 putElem :: VoiceLine -> (Handle -> Builder -> IO ())
 
 putElem vl@(Flutter f) = readSpinBtn vl ["Flutter"]
+putElem vl@(Speed f) = readSpinBtn vl ["Speed"]
 putElem vl@(Roughness f) = readSpinBtn vl ["Roughness"]
 putElem vl@(Intonation f) = readSpinBtn vl ["Intonation"]
 putElem vl@(Voicing f) = readSpinBtn vl ["Voicing"]
@@ -185,9 +187,7 @@ loadVoice fp builder = do
   es <- mapM (builderGetObject builder castToEditable) lbls
   forM es $ \e -> after e editableChanged (dumpVoice e fp vf builder)
   forkIO $ do
-    frq <- calbSynth "lyrvoc" "espeak-ng" fp "ee"
-    postGUISync $ setLabel "PitchMeasured" frq builder
-    threadDelay 2000
+    threadDelay 1000
     postGUISync $ setIdle builder
   return ()
 
@@ -214,8 +214,10 @@ setPlay fp builder = do
       sclb <- getLabel "ScorePath" builder
       scpt <- getCBox "ScorePart" builder
       detu <- getSpinBtn "Detune" builder
+      cfrq <- getSpinBtn "PitchSet" builder
+      trim <- getSpinBtn "BackLength" builder
       setLabel "VocalPath" "..." builder
-      r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu Nothing
+      r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu (Just cfrq)
       case r of
         Left err -> do
           setLabel "VocalPath" ("Error: " ++ err) builder
@@ -225,12 +227,11 @@ setPlay fp builder = do
           widgetSetSensitive (castToWidget play) False
           widgetSetSensitive (castToWidget loop) False
           bfp <- getLabel "BackingPath" builder
-          mp <- mixVoc wfp bfp
+          mp <- mixVoc wfp bfp (Just trim)
           widgetSetSensitive (castToWidget stop) True
           after stop buttonActivated $ stopVoc mp
           forkIO $ do 
             b <- waitVoc mp (progress builder)
-            putStrLn $ show b
             postGUIAsync $ do
               after stop buttonActivated $ return ()
               widgetSetSensitive (castToWidget stop) False

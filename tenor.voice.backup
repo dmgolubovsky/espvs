@@ -11,6 +11,7 @@ dictrules 3 6
 voicing 150
 consonants 20 30
 tone 80 200 250 40 300 20 800 20
+speed 100
 
 replace 03 I  i
 replace 03 I2 i

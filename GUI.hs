@@ -14,6 +14,7 @@ import Data.List
 import Data.Text (pack, unpack)
 import Data.Maybe
 import System.Directory
+import Data.Bool
 
 import WithCli
 
@@ -216,8 +217,9 @@ setPlay fp builder = do
       detu <- getSpinBtn "Detune" builder
       cfrq <- getSpinBtn "PitchSet" builder
       trim <- getSpinBtn "BackLength" builder
+      force <- builderGetObject builder castToToggleButton "ForcePitch" >>= toggleButtonGetActive
       setLabel "VocalPath" "..." builder
-      r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu (Just cfrq)
+      r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu $ bool Nothing (Just cfrq) force
       case r of
         Left err -> do
           setLabel "VocalPath" ("Error: " ++ err) builder

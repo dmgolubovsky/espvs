@@ -2028,7 +2028,7 @@
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="Play">
-                <property name="label" translatable="yes">▶️</property>
+                <property name="label" translatable="yes">▶️ Play</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -2041,7 +2041,7 @@
             </child>
             <child>
               <object class="GtkButton" id="Stop">
-                <property name="label" translatable="yes">⏹️</property>
+                <property name="label" translatable="yes">⏹️ Stop</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -2055,7 +2055,7 @@
             </child>
             <child>
               <object class="GtkButton" id="Loop">
-                <property name="label" translatable="yes">🔁</property>
+                <property name="label" translatable="yes">🔁 Loop</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

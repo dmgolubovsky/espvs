@@ -17,7 +17,7 @@ import System.Directory
 import Data.Bool
 
 import WithCli
-
+import Paths_espvs
 import VoiceFile
 import CalbSynth
 
@@ -129,7 +129,8 @@ apm (f:fs) a = (f a):(apm fs a)
 mainWithGUI fp opts = do
   initGUI
   builder <- builderNew
-  builderAddFromFile builder "espvs.ui"
+  uipath <- getDataFileName "espvs.ui"
+  builderAddFromFile builder uipath
   wmain <- builderGetObject builder castToWindow "window1"
   on wmain objectDestroy mainQuit
   after wmain realize $ loadVoice fp builder
@@ -231,6 +232,8 @@ setPlay fp builder = do
           bfp <- getLabel "BackingPath" builder
           mp <- mixVoc wfp bfp (Just trim)
           widgetSetSensitive (castToWidget stop) True
+          wmain <- builderGetObject builder castToWindow "window1"
+          on wmain objectDestroy $ stopVoc mp
           after stop buttonActivated $ stopVoc mp
           forkIO $ do 
             b <- waitVoc mp (progress builder)

@@ -219,6 +219,7 @@ setPlay fp builder = do
       cfrq <- getSpinBtn "PitchSet" builder
       trim <- getSpinBtn "BackLength" builder
       force <- builderGetObject builder castToToggleButton "ForcePitch" >>= toggleButtonGetActive
+      mute0 <- builderGetObject builder castToToggleButton "MuteBack" >>= toggleButtonGetActive
       setLabel "VocalPath" "..." builder
       r <- genVocal "lyrvoc" "espeak-ng" fp sclb scpt detu $ bool Nothing (Just cfrq) force
       case r of
@@ -230,10 +231,11 @@ setPlay fp builder = do
           widgetSetSensitive (castToWidget play) False
           widgetSetSensitive (castToWidget loop) False
           bfp <- getLabel "BackingPath" builder
-          mp <- mixVoc wfp bfp (Just trim)
+          let mute = mute0 || (length bfp == 0)
+          mp <- mixVoc wfp (bool bfp "" mute) (bool (Just trim) Nothing mute)
           widgetSetSensitive (castToWidget stop) True
           wmain <- builderGetObject builder castToWindow "window1"
-          on wmain objectDestroy $ stopVoc mp
+          after wmain objectDestroy $ stopVoc mp
           after stop buttonActivated $ stopVoc mp
           forkIO $ do 
             b <- waitVoc mp (progress builder)

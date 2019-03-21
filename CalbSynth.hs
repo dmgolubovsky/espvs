@@ -6,6 +6,7 @@ import System.Exit
 import System.Process
 import System.Process.Internals
 import System.Posix.Signals
+import System.Cmd
 import System.FilePath
 import System.Environment
 import Control.Concurrent.Thread
@@ -19,6 +20,7 @@ genVocal execp synthp voice score part detune mbcf = do
               Nothing -> []
               Just cf -> ["-F", cf]
   let synth = proc execp $ [ "-v", voice,
+                             "-A", "200",
                              "-p", part,
                              "-D", detune,
                              "-S"] ++ cfl ++ [score]
@@ -87,10 +89,13 @@ mixVoc voc back mbtrim = do
   let mback = case back of
         [] -> []
         bf -> ["-m", bf]
+  let rmx = case mback of
+        [] -> []
+        _ -> ["remix", "-"]
   let trim = case mbtrim of
         Nothing -> []
         Just tr -> ["trim", "0", tr]
-  let play = proc "play" $ ["-S"] ++ mback ++ [voc, "remix", "-"] ++ trim
+  let play = proc "play" $ ["-S"] ++ mback ++ [voc] ++ rmx ++ trim
   createProcess play {std_out = CreatePipe, std_err = CreatePipe}
 
 waitVoc :: (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle) -> (String -> IO()) -> IO Bool
@@ -103,9 +108,11 @@ waitVoc (_, _, _, p) prgr = do
 
 stopVoc :: (Maybe Handle, Maybe Handle, Maybe Handle, ProcessHandle) -> IO ()
 
-stopVoc (_, _, _, p) = withProcessHandle p $ \ph_ ->
+stopVoc (_, _, _, p) = withProcessHandle p $ \ph_ -> do
     case ph_ of
       OpenHandle pid -> signalProcess sigKILL pid
       ClosedHandle _ -> return () 
+    system "stty sane"
+    return ()
 
 

@@ -20,6 +20,7 @@ genVocal execp synthp voice score part detune mbcf = do
               Nothing -> []
               Just cf -> ["-F", cf]
   let synth = proc execp $ [ "-v", voice,
+                             "-x", synthp,
                              "-A", "200",
                              "-p", part,
                              "-D", detune,

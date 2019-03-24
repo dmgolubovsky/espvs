@@ -89,7 +89,7 @@ mixVoc :: FilePath -> FilePath -> Maybe String
 mixVoc voc back mbtrim = do
   let mback = case back of
         [] -> []
-        bf -> ["-m", bf]
+        bf -> ["--combine", "mix-power", "-v", "0.6",  bf]
   let rmx = case mback of
         [] -> []
         _ -> ["remix", "-"]

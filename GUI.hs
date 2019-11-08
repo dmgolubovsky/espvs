@@ -130,7 +130,7 @@ mainWithGUI fp opts = do
   initGUI
   builder <- builderNew
   uipath <- getDataFileName "espvs.ui"
-  builderAddFromFile builder uipath
+  builderAddFromFile builder "/espvs/share/espvs/espvs.ui"
   wmain <- builderGetObject builder castToWindow "window1"
   on wmain objectDestroy mainQuit
   after wmain realize $ loadVoice fp builder
